@@ -1,0 +1,10 @@
+<a routerLinkActive='active' [routerLink]="item.id" class="clearfix">
+<div class="card" style="width: 18rem; margin: 5px;">
+    <div class="card-body">
+        <h5 class="card-title">{{item.name}}</h5>
+        <p class="card-text">{{item.description}}</p>
+        <a href="{{item.link}}" class="card-link">Link to item</a>
+        <a href="https://www.github.com" class="card-link">Source Code</a>
+    </div>
+</div>
+</a>

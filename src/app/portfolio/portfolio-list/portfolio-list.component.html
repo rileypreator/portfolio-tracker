@@ -1,0 +1,11 @@
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <h4>Portfolio Items</h4>
+            <a class="btn btn-success float-right" [routerLink]="['new']" >New Item</a>
+        </div>
+    </div>
+    <div class="row">
+        <app-portfolio-item *ngFor="let item of portfolio" [item]='item'></app-portfolio-item>
+    </div>
+</div>

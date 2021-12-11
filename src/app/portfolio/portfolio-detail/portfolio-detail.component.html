@@ -1,0 +1,30 @@
+<div class="card" xmlns="http://www.w3.org/1999/html">
+  <div class="card-header">
+    <div class="row pad-all">
+      <h4 class="title margin-left-right">{{item.name}}</h4>
+    </div>
+    <div class="row pull-right margin-left-right">
+      <a class="btn btn-primary" (click)="onView()">View</a>
+      <a class="btn btn-info" [routerLink]="['edit']">Edit</a>
+      <a class="btn btn-danger" (click)="onDelete()">Delete</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="pad-left-right">
+      <div class="row">
+        <label><b>Description: </b> </label>
+        <span class="label-value"> {{item.description}}</span>
+      </div>
+      <br>
+      <div class="row">
+        <label><b>URL: </b> </label>
+        <span class="label-value"> {{item.link}}</span>
+      </div>
+      <br>
+      <div class="row">
+        <label><b>Date: </b> </label>
+        <span class="label-value"> {{item.date}}</span>
+      </div>
+    </div>
+  </div>
+</div>
