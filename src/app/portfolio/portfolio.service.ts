@@ -1,31 +1,44 @@
 import { EventEmitter, Injectable, Output } from '@angular/core';
 import { Subject } from 'rxjs';
 import { PortfolioItem } from './portfolio-item.model';
-import { HttpClient, HttpHeaders} from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MOCKPORTFOLIO } from './MOCKPORTFOLIO';
-
 @Injectable({
   providedIn: 'root'
 })
 export class PortfolioService {
 
   //Variables for the Service
-  portfolio: PortfolioItem[] =[];
+  portfolio: PortfolioItem[] = [];
   portfolioListChangedEvent = new Subject<PortfolioItem[]>();
   maxItemId: number;
 
   //Event Emitters
-  @Output() itemSelectedEvent = new EventEmitter <PortfolioItem>();
-  @Output() itemChangedEvent  = new EventEmitter <PortfolioItem[]>();
+  @Output() itemSelectedEvent = new EventEmitter<PortfolioItem>();
+  @Output() itemChangedEvent = new EventEmitter<PortfolioItem[]>();
 
-  constructor(private httpClient: HttpClient) {
-    this.portfolio = MOCKPORTFOLIO;
+  constructor(private http: HttpClient) {
     this.maxItemId = this.getMaxId();
   }
 
   //Gets the entire portfolio
   getPortfolio() {
-    return this.portfolio.slice();
+    this.http.get("http://localhost:3000/portfolio")
+    
+    .subscribe((value: any) =>{
+          this.portfolio = value.portfolio;
+          console.log(value);
+          console.log(this.portfolio);
+          this.maxItemId = this.getMaxId();
+          this.sortAndSend();
+        },
+
+        (error: any) => {
+          console.log(error);
+        }
+      );
+
+      return this.portfolio;
   }
 
   getPortfolioItem(id: String) {
@@ -38,27 +51,24 @@ export class PortfolioService {
       return;
     }
 
-    const pos = this.portfolio.indexOf(item);
+    const pos = this.portfolio.findIndex(d => d.id === item.id);
 
     if (pos < 0) {
       return;
     }
 
-    this.portfolio.splice(pos, 1);
-    this.portfolioListChangedEvent.next(this.portfolio.slice());
+    this.http.delete('http://localhost:3000/portfolio/' + item.id)
+      .subscribe((response) => {
+        this.portfolio.splice(pos, 1);
+        this.sortAndSend();
+      })
   }
 
   //gets the max id for the next item to be added
-  getMaxId(): number {
+  getMaxId() {
     let maxId = 0;
-
-    this.portfolio.forEach((item) => {
-      let currentId = parseInt(item.id);
-
-      if (currentId > maxId) {
-        maxId = currentId;
-      }
-    });
+    const numArr = this.portfolio.map(item => parseInt(item.id));
+    maxId = Math.max(...numArr);
 
     return maxId;
   }
@@ -69,13 +79,16 @@ export class PortfolioService {
       return;
     }
 
-    this.maxItemId++;
-    newItem.id = this.maxItemId.toString();
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
 
-    this.portfolio.push(newItem);
-    let portfolioClone = this.portfolio.slice();
-
-    this.portfolioListChangedEvent.next(portfolioClone);
+    this.http.post<{message: string, newItem: PortfolioItem}>('http://localhost:3000/portfolio',
+      newItem,
+      { headers: headers})
+      .subscribe((responseData) => {
+          console.log(responseData);
+          this.portfolio.push(responseData.newItem);
+          this.sortAndSend();
+      })
   }
 
   //updates an item in the portfolio
@@ -84,14 +97,34 @@ export class PortfolioService {
       return;
     }
 
-    let pos = this.portfolio.indexOf(originalItem);
+    const pos = this.portfolio.findIndex(d => d.id === originalItem.id);
+
     if (pos < 0) {
       return;
     }
-
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
     newItem.id = originalItem.id;
-    this.portfolio[pos] = newItem;
-    let portfolioClone = this.portfolio.slice();
-    this.portfolioListChangedEvent.next(portfolioClone);
+
+    this.http.put('http://localhost:3000/portfolio/' + originalItem.id, 
+      newItem, {headers: headers})
+      .subscribe((response) => {
+        this.portfolio[pos] = newItem;
+        this.sortAndSend();
+      })
+  }
+
+  sortAndSend() {
+    this.portfolio.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+    this.portfolioListChangedEvent.next(this.portfolio.slice());
+  }
+
+  storePortfolio() {
+    let JSONPortfolio = JSON.stringify(this.portfolio);
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+    this.http.put("http://localhost:3000/portfolio", JSONPortfolio, {headers: headers})
+      .subscribe(()=> {
+        this.portfolioListChangedEvent.next(this.portfolio.slice())
+      })
   }
 }

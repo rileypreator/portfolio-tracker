@@ -41,8 +41,12 @@ export class PortfolioEditComponent implements OnInit {
 
   onSubmit(form: NgForm) {
     let value = form.value;
-    let newItem = new PortfolioItem("", value.name, value.link, value.description, value.date);
+    let id = this.portfolioService.getMaxId().toString();
+    let newItem = new PortfolioItem(id, value.name, value.link, value.description , value.date);
 
+    console.log(id)
+    console.log(newItem);
+    console.log(this.editMode);
     if (this.editMode == true) {
       this.portfolioService.updateItem(this.originalItem, newItem);
     }
